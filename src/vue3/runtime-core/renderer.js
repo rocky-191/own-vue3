@@ -104,6 +104,46 @@ function baseCreateRenderer(options) {
           i++;
         }
       }
+    } else if (i > e2) {// abcd=>abc  (i=3,e1=3,e2=2) 删除节点
+      while (i <= e1) {
+        hostRemove(c1[i].el)
+        i++;
+      }
+    } else {
+      // 无规律情况
+      const s1 = i, s2 = i;
+      // 新索引和key的一个映射
+      const keyToNewIndexMap = new Map();
+      for (let i = s2; i < e2; i++) {
+        const nextchild = c2[i];
+        keyToNewIndexMap.set(nextchild.key, i);
+      }
+      console.log(keyToNewIndexMap)
+      const toBePatched = e2 - s2 + 1;
+      const newIndexToOldMapIndex = new Array(toBePatched).fill(0);
+      for (let i = s1; i <= e1; i++) {
+        const prevChild = c1[i];
+        let newIndex = keyToNewIndexMap.get(prevChild.key);
+        if (newIndex == undefined) {
+          // 删除
+          hostRemove(prevChild.el)
+        } else {
+          newIndexToOldMapIndex[newIndex - s2] = i + 1;
+          patch(prevChild, c2[newIndex], el)
+        }
+      }
+      for (let i = toBePatched - 1; i >= 0; i--) {
+        const nextIndex = s2 + i;
+        const nextChild = c2[nextIndex];
+        const anchor = nextIndex + 1 < c2.length ? c2[nextIndex + 1].el : null;// 当前元素的下一个元素
+        if (newIndexToOldMapIndex[i] === 0) {// 这是新元素，直接插入
+          patch(null, nextChild, el, anchor)
+        } else {
+          // 下面方式需要反复移动元素，性能较差，可参考官方优化手段
+          hostInsert(nextChild.el, el, anchor)
+        }
+
+      }
     }
   }
 

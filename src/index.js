@@ -83,15 +83,16 @@ const App = {
     return ()=>{
       return state.flag ?
       h('div',{style:{color:'red'}},[
+        h('li',{key:'C',style:{background:'yellow'}},'C'),
         h('li',{key:'A',style:{background:'red'}},'A'),
         h('li',{key:'B',style:{background:'blue'}},'B'),
-        h('li',{key:'C',style:{background:'yellow'}},'C')
+        
       ]):
       h('div',{style:{color:'blue'}},[
-        h('li',{key:'D',style:{background:'purple'}},'D'),
-        h('li',{key:'A',style:{background:'red'}},'A'),
         h('li',{key:'B',style:{background:'blue'}},'B'),
-        h('li',{key:'C',style:{background:'yellow'}},'C')
+        h('li',{key:'A',style:{background:'red'}},'A'),
+        h('li',{key:'C',style:{background:'yellow'}},'C'),
+        h('li',{key:'D',style:{background:'purple'}},'D')
       ])
     }
   }
