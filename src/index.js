@@ -54,16 +54,18 @@ import { createApp, reactive,h } from './vue3/index'
 const App = {
   setup() {
     const state = reactive({
+      color:'red',
       user: {
         name: 'rocky',
         age: 18
       }
     })
     setTimeout(()=>{
+      state.color='blue'
       state.user.age++
     },2000)
     return ()=>{
-      return h('div',{style:{color:'red'}},state.user.name+' 今年 '+state.user.age+'岁')
+      return h('div',{style:{color:state.color}},state.user.name+' 今年 '+state.user.age+'岁')
     }
   }
 }
