@@ -89,8 +89,8 @@ const App = {
         
       ]):
       h('div',{style:{color:'blue'}},[
-        h('li',{key:'B',style:{background:'blue'}},'B'),
         h('li',{key:'A',style:{background:'red'}},'A'),
+        h('li',{key:'B',style:{background:'blue'}},'B'),
         h('li',{key:'C',style:{background:'yellow'}},'C'),
         h('li',{key:'D',style:{background:'purple'}},'D')
       ])
