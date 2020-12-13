@@ -17,7 +17,7 @@ function baseCreateRenderer(options) {
     removeChild: hostRemove
   } = options
 
-  const mountElement = (vnode, container) => {
+  const mountElement = (vnode, container, anchor) => {
     let { shapeFlag, props } = vnode
     let el = vnode.el = hostCreateElement(vnode.type);
     // 创建子孙节点
@@ -32,7 +32,7 @@ function baseCreateRenderer(options) {
         hostPatchProp(el, key, null, props[key])
       }
     }
-    hostInsert(el, container)
+    hostInsert(el, container, anchor)
   }
 
   const mountChildren = (children, container) => {
@@ -41,50 +41,98 @@ function baseCreateRenderer(options) {
     }
   }
 
-  const patchProps=(oldProps,newProps,el)=>{
-    if(oldProps!==newProps){
+  const patchProps = (oldProps, newProps, el) => {
+    if (oldProps !== newProps) {
       // 新属性覆盖老属性
-      for(let key in newProps){
-        const prev=oldProps[key],
-              next=newProps[key];
-        if(prev!==next){
-          hostPatchProp(el,key,prev,next)
+      for (let key in newProps) {
+        const prev = oldProps[key],
+          next = newProps[key];
+        if (prev !== next) {
+          hostPatchProp(el, key, prev, next)
         }
       }
       // 老得有属性，新的没有,需要删除属性
-      for(let key in oldProps){
-        if(!(key in newProps)){
-          hostPatchProp(el,key,oldProps[key],null)
+      for (let key in oldProps) {
+        if (!(key in newProps)) {
+          hostPatchProp(el, key, oldProps[key], null)
         }
       }
     }
   }
 
-  const patchChildren=(n1,n2,el)=>{
-    const c1=n1.children,
-          c2=n2.children;
-    const prevShapeFlag=n1.shapeFlag,
-          shapeFlag=n2.shapeFlag;
+  const patchKeydChildren = (c1, c2, el) => {
+    // 内部优化策略 头尾双指针
+    // ab   i=2
+    // abcd
+    let i = 0;
+    let e1 = c1.length - 1,
+      e2 = c2.length - 1;
+    // 从前往后
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[i], n2 = c2[i];
+      if (isSameVnodeType(n1, n2)) {
+        patch(n1, n2, el)
+      } else {
+        break;
+      }
+      i++;
+    }
+    // 从后往前
+    // abc
+    // dabc
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[e1], n2 = c2[e2];
+      if (isSameVnodeType(n1, n2)) {
+        patch(n1, n2, el)
+      } else {
+        break;
+      }
+      e1--;
+      e2--;
+    }
+    // 只考虑元素新增和删除的情况
+    // abc=>abcd (i=3,e1=2,e2=3)   abc=>dabc  (i=0  e1=-1  e2=0)
+    // 规律：只要i>e1 新增元素
+    if (i > e1) {
+      // 新增部分
+      if (i <= e2) {
+        // 根据e2的下一个元素和数组长度比较
+        const nextPos = e2 + 1;
+        const anchor = nextPos < c2.length ? c2[nextPos].el : null;
+        while (i <= e2) {
+          patch(null, c2[i], el, anchor);
+          i++;
+        }
+      }
+    }
+  }
+
+  const patchChildren = (n1, n2, el) => {
+    const c1 = n1.children,
+      c2 = n2.children;
+    const prevShapeFlag = n1.shapeFlag,
+      shapeFlag = n2.shapeFlag;
     // 老节点是文本，新节点也是文本，直接覆盖
     // 老节点是数组，新节点是文本，直接覆盖
-    if(shapeFlag & ShapeFlags.TEXT_CHILDREN){
-      if(c2!==c1){
-        hostSetElementText(el,c2)
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      if (c2 !== c1) {
+        hostSetElementText(el, c2)
       }
-    }else {
+    } else {
       // 老节点是数组，新节点是数组，前后数组diff
-      if(prevShapeFlag & ShapeFlags.ARRAY_CHILDREN){
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         console.log('核心diff')
-      }else{
+        patchKeydChildren(c1, c2, el)
+      } else {
         // 老节点是文本，新节点是数组
-        if(prevShapeFlag & ShapeFlags.TEXT_CHILDREN){
+        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
           // 移除老的文本
-          hostSetElementText(el,'')
+          hostSetElementText(el, '')
         }
-        if(shapeFlag & ShapeFlags.ARRAY_CHILDREN){
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
           // 插入新的数组
-          for(let i=0;i<c2.length;i++){
-            patch(null,c2[i],el)
+          for (let i = 0; i < c2.length; i++) {
+            patch(null, c2[i], el)
           }
         }
       }
@@ -94,20 +142,20 @@ function baseCreateRenderer(options) {
   const patchElement = (n1, n2, container) => {
     console.log('元素更新')
     let el = (n2.el = n1.el);
-    const oldProps=n1.props || {};
-    const newProps=n2.props || {};
+    const oldProps = n1.props || {};
+    const newProps = n2.props || {};
 
-    patchProps(oldProps,newProps,el);
-    patchChildren(n1,n2,el)
+    patchProps(oldProps, newProps, el);
+    patchChildren(n1, n2, el)
   }
 
-  const processElement = (n1, n2, container) => {
+  const processElement = (n1, n2, container, anchor) => {
     if (n1 === null) {
       // 初次渲染挂载
-      mountElement(n2, container)
+      mountElement(n2, container, anchor)
     } else {
       // 更新
-      patchElement(n1, n2, container)
+      patchElement(n1, n2, container, anchor)
     }
   }
 
@@ -155,7 +203,7 @@ function baseCreateRenderer(options) {
     return n1.type === n2.type && n1.key === n2.key;
   }
 
-  const patch = (n1, n2, container) => {
+  const patch = (n1, n2, container, anchor = null) => {
     const { shapeFlag } = n2;
 
     if (n1) {
@@ -171,7 +219,7 @@ function baseCreateRenderer(options) {
 
     if (shapeFlag & ShapeFlags.ELEMENT) {
       console.log('元素节点', container)
-      processElement(n1, n2, container)
+      processElement(n1, n2, container, anchor)
     } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
       console.log('组件', container)
       processComponent(n1, n2, container)

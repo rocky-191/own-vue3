@@ -51,21 +51,48 @@
 // },3000)
 import { createApp, reactive,h } from './vue3/index'
 
+// 基础示例
+// const App = {
+//   setup() {
+//     const state = reactive({
+//       color:'red',
+//       user: {
+//         name: 'rocky',
+//         age: 18
+//       }
+//     })
+//     setTimeout(()=>{
+//       state.color='blue'
+//       state.user.age++
+//     },2000)
+//     return ()=>{
+//       return h('div',{style:{color:state.color}},state.user.name+' 今年 '+state.user.age+'岁')
+//     }
+//   }
+// }
+
+// 核心diff示例
 const App = {
   setup() {
     const state = reactive({
-      color:'red',
-      user: {
-        name: 'rocky',
-        age: 18
-      }
+      flag:true
     })
     setTimeout(()=>{
-      state.color='blue'
-      state.user.age++
+      state.flag=!state.flag;
     },2000)
     return ()=>{
-      return h('div',{style:{color:state.color}},state.user.name+' 今年 '+state.user.age+'岁')
+      return state.flag ?
+      h('div',{style:{color:'red'}},[
+        h('li',{key:'A',style:{background:'red'}},'A'),
+        h('li',{key:'B',style:{background:'blue'}},'B'),
+        h('li',{key:'C',style:{background:'yellow'}},'C')
+      ]):
+      h('div',{style:{color:'blue'}},[
+        h('li',{key:'D',style:{background:'purple'}},'D'),
+        h('li',{key:'A',style:{background:'red'}},'A'),
+        h('li',{key:'B',style:{background:'blue'}},'B'),
+        h('li',{key:'C',style:{background:'yellow'}},'C')
+      ])
     }
   }
 }
