@@ -49,7 +49,7 @@
 // setTimeout(()=>{
 //   state.user[10]=2;
 // },3000)
-import { createApp, reactive } from './vue3/index'
+import { createApp, reactive,h } from './vue3/index'
 
 const App = {
   setup() {
@@ -59,10 +59,13 @@ const App = {
         age: 18
       }
     })
-    return {
-      state
+    setTimeout(()=>{
+      state.user.age++
+    },2000)
+    return ()=>{
+      return h('div',{style:{color:'red'}},state.user.name+' 今年 '+state.user.age+'岁')
     }
   }
 }
 
-createApp(App).mount(document.getElementById("app"))
+createApp(App).mount('#app')

@@ -16,8 +16,9 @@ export function createApp(rootComponent) {
   const { mount } = app;
   app.mount = (container) => {
     // 1.挂载时需要先将容器清空
-    container.innerHTML = '';
-    mount(container)
+    const cn=document.querySelector(container)
+    cn.innerHTML = '';
+    mount(cn)
   }
 
   return app;

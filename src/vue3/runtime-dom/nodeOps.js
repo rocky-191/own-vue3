@@ -6,7 +6,7 @@ export const nodeOps = {
     el.textContent = text;
   },
   insetElement(child, parent, anchor = null) {
-    parent.inserBofore(child, anchor); // anchor为null表示appendChild
+    parent.insertBefore(child, anchor); // anchor为null表示appendChild
   },
   removeChild(child) {
     const parent = child.parentNode;
